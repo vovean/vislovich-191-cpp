@@ -114,7 +114,7 @@ BigInt operator+(const BigInt &lhs, const BigInt &rhs) {
     int t = 0;
     for (int i = size - 1; i >= 0; --i) {
         sum[i + 1] = (lhs_digits[i] + rhs_digits[i] + t) % 10;
-        t = (rhs_digits[i] + rhs_digits[i] + t) / 10;
+        t = (lhs_digits[i] + rhs_digits[i] + t) / 10;
     }
     sum[0] = t;
     return BigInt(sum, false);
