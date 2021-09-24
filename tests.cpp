@@ -98,6 +98,8 @@ TEST(Operators, Plus) {
     ASSERT_TRUE(BigInt(123) + BigInt("123") == 246);
     ASSERT_TRUE(BigInt(123) + BigInt("23") == 146);
     ASSERT_TRUE(BigInt(123) + BigInt("1123") == 1246);
+    // advanced case
+    ASSERT_TRUE(BigInt(163) + BigInt("1169") == 1332);
     // a + (-b)
     ASSERT_TRUE(BigInt(123) + BigInt("-122") == 1);
     ASSERT_TRUE(BigInt(123) + BigInt("-123") == 0);
