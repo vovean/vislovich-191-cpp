@@ -201,6 +201,27 @@ TEST(Operators, Multiply) {
     ASSERT_EQ(BigInt("32465825956543") * BigInt("9546754906740"), BigInt("309943283251993739257799820"));
 }
 
+TEST(Operators, Divide) {
+    // lesser divided by greater
+    ASSERT_EQ(BigInt(2) / 3, 0);
+    // main for loop doesn't work
+    ASSERT_EQ(BigInt(6) / 2, 3);
+    // simple cases
+    ASSERT_EQ(BigInt(2) / 2, 1);
+    ASSERT_EQ(BigInt(2) / -2, -1);
+    ASSERT_EQ(BigInt(-2) / 2, -1);
+    ASSERT_EQ(BigInt(-2) / -2, 1);
+    // check division towards zero
+    ASSERT_EQ(BigInt(3) / 2, 1);
+    ASSERT_EQ(BigInt(3) / -2, -1);
+    ASSERT_EQ(BigInt(-3) / 2, -1); // not -2
+    ASSERT_EQ(BigInt(-3) / -2, 1);
+    // advanced case
+    ASSERT_EQ(BigInt("2736452834528435438245") / 23654, BigInt("115686684473173054"));
+    ASSERT_EQ(BigInt("913286491285639827569235623985620356293586192365923659235") / BigInt("-23498562965239865293562387562873562837568325768325"),
+              BigInt("-38865631"));
+}
+
 int main(int argc, char **argv) {
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

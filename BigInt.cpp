@@ -36,10 +36,6 @@ bool BigInt::operator>=(const BigInt &rhs) const {
     return *this > rhs || *this == rhs;
 }
 
-bool BigInt::operator==(const long long int &rhs) const {
-    return *this == BigInt(rhs);
-}
-
 bool BigInt::operator==(const BigInt &rhs) const {
     return negative == rhs.negative && digits == rhs.digits;
 }
@@ -54,7 +50,7 @@ std::vector<short> BigInt::get_digits(unsigned long long int a) {
     return _digits;
 }
 
-std::vector<short> BigInt::get_digits(std::string a) {
+std::vector<short> BigInt::get_digits(std::string_view a) {
     int i = 0;
     while (a[i] == '0')
         i++;
@@ -76,7 +72,7 @@ BigInt::BigInt(unsigned long long int a, bool negative = false) : negative(negat
     }
 }
 
-BigInt::BigInt(std::string a) {
+BigInt::BigInt(std::string_view a) {
     negative = a[0] == '-';
     digits = get_digits(a[0] == '-' ? a.substr(1) : a);
 }
@@ -165,39 +161,11 @@ BigInt BigInt::operator-(const BigInt &rhs) const {
     return BigInt(diff, false);
 }
 
-bool BigInt::operator>=(const long long int &rhs) const {
-    return *this >= BigInt(rhs);
-}
-
-bool BigInt::operator<=(const long long int &rhs) const {
-    return *this <= BigInt(rhs);
-}
-
-bool BigInt::operator>(const long long int &rhs) const {
-    return *this > BigInt(rhs);
-}
-
-bool BigInt::operator<(const long long int &rhs) const {
-    return *this < BigInt(rhs);
-}
-
 bool BigInt::operator!=(const BigInt &rhs) const {
     return !(*this == rhs);
 }
 
-bool BigInt::operator!=(const long long int &rhs) const {
-    return !(*this == rhs);
-}
-
 BigInt &BigInt::operator=(const BigInt &other) = default;
-
-BigInt BigInt::operator+(const long long int &rhs) const {
-    return *this + BigInt(rhs);
-}
-
-BigInt BigInt::operator-(const long long int &rhs) const {
-    return *this - BigInt(rhs);
-}
 
 BigInt BigInt::operator++() {
     *this = *this + 1;
@@ -280,6 +248,53 @@ BigInt &BigInt::operator-=(const BigInt &rhs) {
     return *this;
 }
 
-BigInt BigInt::operator*(const long long int &rhs) const {
-    return *this * BigInt(rhs);
+BigInt &BigInt::operator*=(const BigInt &rhs) {
+    *this = *this * rhs;
+    return *this;
+}
+
+BigInt BigInt::abs() const {
+    return BigInt(digits, false);
+}
+
+/*
+ * Important to notice, that the integral division here is performed in absolute values, in other words, towards zero
+ * Examples:
+ * >  3 /   2  ==  1
+ * > -3 /   2  == -1
+ * >  3 / (-2) == -1
+ * > -3 / (-2) ==  1
+ */
+BigInt BigInt::operator/(const BigInt &rhs) const {
+    if (abs() < rhs.abs())
+        return BigInt(0);
+    bool negativity = negative ^ rhs.negative;
+    BigInt rhs_abs = rhs.abs();
+    BigInt ans(0), tmp(digits[0]);
+    for (int i = 1; i < digits.size(); ++i) {
+        tmp *= 10;
+        tmp += digits[i];
+        if (tmp < rhs_abs) {
+            ans *= 10;
+            continue;
+        }
+        int c = 0;
+        // happens <= 10 times
+        while (tmp >= rhs_abs) {
+            tmp -= rhs_abs;
+            c++;
+        }
+        ans *= 10;
+        ans += c;
+    }
+    // lhs is 1-digit BigInt
+    if (tmp >= rhs_abs) {
+        int c = 0;
+        while (tmp >= rhs_abs) {
+            tmp -= rhs_abs;
+            c++;
+        }
+        ans += c;
+    }
+    return BigInt(ans.digits, negativity);
 }
