@@ -5,6 +5,7 @@
 #include "BigInt.h"
 #include <algorithm>
 #include <iostream>
+#include <numeric>
 #include <utility>
 
 bool BigInt::operator<(const BigInt &rhs) const {
@@ -43,7 +44,7 @@ bool BigInt::operator==(const BigInt &rhs) const {
     return negative == rhs.negative && digits == rhs.digits;
 }
 
-std::vector<short> BigInt::get_digits(long long int a) {
+std::vector<short> BigInt::get_digits(unsigned long long int a) {
     std::vector<short> _digits;
     while (a) {
         _digits.push_back(a % 10);
@@ -68,9 +69,11 @@ std::vector<short> BigInt::get_digits(std::string a) {
     return chars;
 }
 
-BigInt::BigInt(long long int a) {
-    negative = a < 0;
-    digits = get_digits(a >= 0 ? a : -a);
+BigInt::BigInt(unsigned long long int a, bool negative = false) : negative(negative) {
+    digits = get_digits(a);
+    if (digits.empty()) {
+        digits = std::vector<short>(1, 0);
+    }
 }
 
 BigInt::BigInt(std::string a) {
@@ -80,9 +83,12 @@ BigInt::BigInt(std::string a) {
 
 BigInt::BigInt(std::vector<short> _digits, bool negative) : digits(std::move(_digits)), negative(negative) {
     int i = 0;
-    while (digits[i] == 0)
+    while (digits[i] == 0 && i < digits.size())
         i++;
-    digits = std::vector<short>(digits.begin() + i, digits.end());
+    if (i != digits.size())
+        digits = std::vector<short>(digits.begin() + i, digits.end());
+    else
+        digits = std::vector<short>(1, 0);
 }
 
 std::ostream &operator<<(std::ostream &os, const BigInt &bigInt) {
@@ -96,12 +102,12 @@ std::ostream &operator<<(std::ostream &os, const BigInt &bigInt) {
     return os;
 }
 
-BigInt operator+(const BigInt &lhs, const BigInt &rhs) {
-    if (lhs.negative)
-        return rhs - BigInt(lhs.digits, false);
+BigInt BigInt::operator+(const BigInt &rhs) const {
+    if (negative)
+        return rhs - BigInt(digits, false);
     if (rhs.negative)
-        return lhs - BigInt(rhs.digits, false);
-    auto lhs_digits = lhs.digits;
+        return *this - BigInt(rhs.digits, false);
+    auto lhs_digits = digits;
     auto rhs_digits = rhs.digits;
     int size = std::max(lhs_digits.size(), rhs_digits.size());
     auto leading_zeros = std::vector<int>(size - std::min(lhs_digits.size(), rhs_digits.size()), 0);
@@ -120,30 +126,30 @@ BigInt operator+(const BigInt &lhs, const BigInt &rhs) {
     return BigInt(sum, false);
 }
 
-BigInt operator-(const BigInt &lhs, const BigInt &rhs) {
+BigInt BigInt::operator-(const BigInt &rhs) const {
     // -a - (-b) = -a + b = b - a
-    if (lhs.negative && rhs.negative)
+    if (negative && rhs.negative)
         // can use + instead of - right part, but it will be harder to understand
-        return BigInt(rhs.digits, false) - BigInt(lhs.digits, false);
+        return BigInt(rhs.digits, false) - BigInt(digits, false);
     // -a - b = -(a + b)
-    if (lhs.negative && !rhs.negative)
+    if (negative && !rhs.negative)
         return BigInt(
-                (BigInt(lhs.digits, false) + rhs).digits,
+                (BigInt(digits, false) + rhs).digits,
                 true
         );
     // a - (-b) = a + b
-    if (!lhs.negative && rhs.negative)
+    if (!negative && rhs.negative)
         return BigInt(
-                (lhs + BigInt(rhs.digits, false)).digits,
+                (*this + BigInt(rhs.digits, false)).digits,
                 false
         );
     // both >= 0
-    if (rhs == lhs)
+    if (rhs == *this)
         return BigInt(0);
-    if (rhs > lhs)
-        return BigInt((rhs - lhs).digits, true);
+    if (rhs > *this)
+        return BigInt((rhs - *this).digits, true);
     // greater minus lower
-    auto lhs_digits = lhs.digits;
+    auto lhs_digits = digits;
     auto rhs_digits = rhs.digits;
     auto leading_zeros = std::vector<short>(lhs_digits.size() - rhs_digits.size(), 0);
     rhs_digits.insert(rhs_digits.begin(), leading_zeros.begin(), leading_zeros.end());
@@ -157,4 +163,123 @@ BigInt operator-(const BigInt &lhs, const BigInt &rhs) {
         diff[i] = lhs_digits[i] - rhs_digits[i] + 10;
     }
     return BigInt(diff, false);
+}
+
+bool BigInt::operator>=(const long long int &rhs) const {
+    return *this >= BigInt(rhs);
+}
+
+bool BigInt::operator<=(const long long int &rhs) const {
+    return *this <= BigInt(rhs);
+}
+
+bool BigInt::operator>(const long long int &rhs) const {
+    return *this > BigInt(rhs);
+}
+
+bool BigInt::operator<(const long long int &rhs) const {
+    return *this < BigInt(rhs);
+}
+
+bool BigInt::operator!=(const BigInt &rhs) const {
+    return !(*this == rhs);
+}
+
+bool BigInt::operator!=(const long long int &rhs) const {
+    return !(*this == rhs);
+}
+
+BigInt &BigInt::operator=(const BigInt &other) = default;
+
+BigInt BigInt::operator+(const long long int &rhs) const {
+    return *this + BigInt(rhs);
+}
+
+BigInt BigInt::operator-(const long long int &rhs) const {
+    return *this - BigInt(rhs);
+}
+
+BigInt BigInt::operator++() {
+    *this = *this + 1;
+    return *this;
+}
+
+BigInt BigInt::operator++(int a) {
+    BigInt tmp = *this;
+    *this = *this + 1;
+    return tmp;
+}
+
+BigInt BigInt::operator--() {
+    *this = *this - 1;
+    return *this;
+}
+
+BigInt BigInt::operator--(int a) {
+    BigInt tmp = *this;
+    *this = *this - 1;
+    return tmp;
+}
+
+BigInt BigInt::operator-() {
+    return BigInt(digits, !negative);
+}
+
+BigInt BigInt::operator*(const BigInt &rhs) const {
+    if (*this < rhs)
+        return rhs * *this;
+    bool negativity = negative ^ rhs.negative;
+    auto rhs_digits = rhs.digits;
+
+    BigInt sum(0);
+    for (int i = 0; i < rhs_digits.size(); ++i) {
+        sum += multiplied_by_digit(rhs_digits[rhs_digits.size() - i - 1]) << i;
+    }
+    return BigInt(sum.digits, negativity);
+}
+
+BigInt BigInt::multiplied_by_digit(short digit) const {
+    std::vector<short> lhs_digits(digits.begin(), digits.end());
+    auto rhs_digits = std::vector<short>(lhs_digits.size(), digit);
+
+    std::vector<short> new_digits;
+    std::transform(lhs_digits.begin(), lhs_digits.end(),
+                   rhs_digits.begin(),
+                   std::back_inserter(new_digits),
+                   std::multiplies<>());
+    for (int i = new_digits.size() - 1; i > 0; --i) {
+        if (new_digits[i] > 9) {
+            new_digits[i - 1] += new_digits[i] / 10;
+            new_digits[i] %= 10;
+        }
+    }
+    if (new_digits[0] > 9) {
+        new_digits.insert(new_digits.begin(), new_digits[0] / 10);
+        new_digits[1] %= 10;
+    }
+    return BigInt(new_digits, negative);
+}
+
+BigInt BigInt::operator<<(const long long n) const {
+    if (n > 0) {
+        auto digits_copy = digits;
+        std::vector<short> zeros(n, 0);
+        digits_copy.insert(digits_copy.end(), zeros.begin(), zeros.end());
+        return BigInt(digits_copy, negative);
+    }
+    return *this;
+}
+
+BigInt &BigInt::operator+=(const BigInt &rhs) {
+    *this = *this + rhs;
+    return *this;
+}
+
+BigInt &BigInt::operator-=(const BigInt &rhs) {
+    *this = *this - rhs;
+    return *this;
+}
+
+BigInt BigInt::operator*(const long long int &rhs) const {
+    return *this * BigInt(rhs);
 }
