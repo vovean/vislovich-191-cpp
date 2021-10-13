@@ -5,8 +5,6 @@
 #include "BigInt.h"
 #include <algorithm>
 #include <iostream>
-#include <numeric>
-#include <utility>
 
 bool BigInt::operator<(const BigInt &rhs) const {
     if (*this == rhs)
@@ -40,22 +38,12 @@ bool BigInt::operator==(const BigInt &rhs) const {
     return negative == rhs.negative && digits == rhs.digits;
 }
 
-std::vector<short> BigInt::get_digits(unsigned long long int a) {
-    std::vector<short> _digits;
-    while (a) {
-        _digits.push_back(a % 10);
-        a /= 10;
-    }
-    std::reverse(_digits.begin(), _digits.end());
-    return _digits;
-}
-
-std::vector<short> BigInt::get_digits(std::string_view a) {
+std::vector<int8_t> BigInt::get_digits(std::string_view a) {
     int i = 0;
     while (a[i] == '0')
         i++;
-    std::vector<short> chars(a.begin() + i, a.end());
-    std::for_each(chars.begin(), chars.end(), [&a, this](short &s) {
+    std::vector<int8_t> chars(a.begin() + i, a.end());
+    std::for_each(chars.begin(), chars.end(), [&a, this](int8_t &s) {
         if (s < '0' || s > '9') {
             std::cerr << "Invalid value for integer: " << (negative ? "-" : "") << a << std::endl;
             exit(1);
@@ -65,35 +53,71 @@ std::vector<short> BigInt::get_digits(std::string_view a) {
     return chars;
 }
 
-BigInt::BigInt(unsigned long long int a, bool negative = false) : negative(negative) {
-    digits = get_digits(a);
+BigInt::BigInt(int64_t a) {
+    negative = a < 0;
+    while (a) {
+        digits.emplace_back(std::abs(a % 10));
+        a /= 10;
+    }
+    std::reverse(digits.begin(), digits.end());
     if (digits.empty()) {
-        digits = std::vector<short>(1, 0);
+        digits = {0};
+    }
+}
+
+BigInt::BigInt(uint64_t a) {
+    negative = false;
+    while (a) {
+        digits.emplace_back(a % 10);
+        a /= 10;
+    }
+    std::reverse(digits.begin(), digits.end());
+    if (digits.empty()) {
+        digits = {0};
     }
 }
 
 BigInt::BigInt(std::string_view a) {
-    negative = a[0] == '-';
-    digits = get_digits(a[0] == '-' ? a.substr(1) : a);
+    if (a[0] == '-') {
+        negative = true;
+        a = a.substr(1);
+    } else {
+        negative = false;
+    }
+    if (a.empty()){
+        digits = {0};
+        return;
+    }
+    int i = 0;
+    while (a[i] == '0')
+        i++;
+    std::for_each(a.begin() + i, a.end(), [&a, this](const char &s) {
+        if (s < '0' || s > '9') {
+            std::cerr << "Invalid value for integer: " << (negative ? "-" : "") << a << std::endl;
+            exit(1);
+        }
+        digits.emplace_back(s - '0');
+    });
+
 }
 
-BigInt::BigInt(std::vector<short> _digits, bool negative) : digits(std::move(_digits)), negative(negative) {
+BigInt::BigInt(std::vector<int8_t> _digits, bool negative) : digits(std::move(_digits)), negative(negative) {
     int i = 0;
     while (digits[i] == 0 && i < digits.size())
         i++;
     if (i != digits.size())
-        digits = std::vector<short>(digits.begin() + i, digits.end());
+        digits = std::vector<int8_t>(digits.begin() + i, digits.end());
     else
-        digits = std::vector<short>(1, 0);
+        digits = std::vector<int8_t>(1, 0);
 }
 
 std::ostream &operator<<(std::ostream &os, const BigInt &bigInt) {
     if (bigInt.negative) {
         os << "-";
     }
-    std::vector<short> digits = bigInt.digits;
-    std::for_each(digits.begin(), digits.end(), [&os](short &i) {
-        os << i;
+    std::vector<int8_t> digits = bigInt.digits;
+    std::for_each(digits.begin(), digits.end(), [&os](int8_t &i) {
+        os << +i;
     });
     return os;
 }
@@ -112,7 +136,7 @@ BigInt BigInt::operator+(const BigInt &rhs) const {
     } else {
         rhs_digits.insert(rhs_digits.begin(), leading_zeros.begin(), leading_zeros.end());
     }
-    std::vector<short> sum(size + 1, 0);
+    std::vector<int8_t> sum(size + 1, 0);
     int t = 0;
     for (int i = size - 1; i >= 0; --i) {
         sum[i + 1] = (lhs_digits[i] + rhs_digits[i] + t) % 10;
@@ -147,9 +171,9 @@ BigInt BigInt::operator-(const BigInt &rhs) const {
     // greater minus lower
     auto lhs_digits = digits;
     auto rhs_digits = rhs.digits;
-    auto leading_zeros = std::vector<short>(lhs_digits.size() - rhs_digits.size(), 0);
+    auto leading_zeros = std::vector<int8_t>(lhs_digits.size() - rhs_digits.size(), 0);
     rhs_digits.insert(rhs_digits.begin(), leading_zeros.begin(), leading_zeros.end());
-    std::vector<short> diff(lhs_digits.size(), 0);
+    std::vector<int8_t> diff(lhs_digits.size(), 0);
     for (int i = lhs_digits.size() - 1; i >= 0; --i) {
         if (lhs_digits[i] >= rhs_digits[i]) {
             diff[i] = lhs_digits[i] - rhs_digits[i];
@@ -206,11 +230,11 @@ BigInt BigInt::operator*(const BigInt &rhs) const {
     return BigInt(sum.digits, negativity);
 }
 
-BigInt BigInt::multiplied_by_digit(short digit) const {
-    std::vector<short> lhs_digits(digits.begin(), digits.end());
-    auto rhs_digits = std::vector<short>(lhs_digits.size(), digit);
+BigInt BigInt::multiplied_by_digit(int8_t digit) const {
+    std::vector<int8_t> lhs_digits(digits.begin(), digits.end());
+    auto rhs_digits = std::vector<int8_t>(lhs_digits.size(), digit);
 
-    std::vector<short> new_digits;
+    std::vector<int8_t> new_digits;
     std::transform(lhs_digits.begin(), lhs_digits.end(),
                    rhs_digits.begin(),
                    std::back_inserter(new_digits),
@@ -231,7 +255,7 @@ BigInt BigInt::multiplied_by_digit(short digit) const {
 BigInt BigInt::operator<<(const long long n) const {
     if (n > 0) {
         auto digits_copy = digits;
-        std::vector<short> zeros(n, 0);
+        std::vector<int8_t> zeros(n, 0);
         digits_copy.insert(digits_copy.end(), zeros.begin(), zeros.end());
         return BigInt(digits_copy, negative);
     }

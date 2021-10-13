@@ -12,33 +12,26 @@
 
 class BigInt {
 private:
-    std::vector<short> digits;
+    std::vector<int8_t> digits;
     bool negative;
 
-    std::vector<short> get_digits(unsigned long long);
+    std::vector<int8_t> get_digits(std::string_view);
 
-    std::vector<short> get_digits(std::string_view);
-
-    BigInt(unsigned long long, bool);
-
-    BigInt multiplied_by_digit(short) const;
+    BigInt multiplied_by_digit(int8_t) const;
 
 public:
-    template<typename Integral, typename std::enable_if<
-            std::is_integral<Integral>::value &&
-            !std::is_same<Integral, bool>::value &&
-            std::is_signed<Integral>::value, Integral>::type * = nullptr>
-    BigInt(Integral a) : BigInt(::abs(a), a < 0) {}
 
-    template<typename Integral, typename std::enable_if<
-            std::is_integral<Integral>::value &&
-            !std::is_same<Integral, bool>::value &&
-            !std::is_signed<Integral>::value, Integral>::type * = nullptr>
-    BigInt(Integral a) : BigInt(a, false) {}
+    template<typename Integral,
+            typename std::enable_if_t<std::is_integral_v<Integral> && !std::is_same_v<Integral, bool>, Integral> * = nullptr>
+    BigInt(Integral a) : BigInt(std::conditional_t<std::is_signed_v<Integral>, int64_t, uint64_t>(a)) {}
+
+    BigInt(uint64_t);
+
+    BigInt(int64_t);
 
     BigInt(std::string_view);
 
-    BigInt(std::vector<short>, bool);
+    BigInt(std::vector<int8_t>, bool);
 
     friend std::ostream &operator<<(std::ostream &, const BigInt &);
 
