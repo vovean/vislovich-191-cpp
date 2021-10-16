@@ -4,6 +4,7 @@
 
 #include <gtest/gtest.h>
 #include <sstream>
+#include <limits>
 #include "BigInt.h"
 
 TEST(Base, Base) {
@@ -54,6 +55,42 @@ TEST(Base, TestConstructor) {
             ::testing::ExitedWithCode(1),
             "Invalid value for integer: --9476346"
     );
+}
+
+template<typename V, typename T>
+void assert_str_equal(V a, T obj) {
+    std::stringstream ss;
+    ss << a << " " << +obj;
+    std::string aS, objS;
+    ss >> aS >> objS;
+    ASSERT_EQ(aS, objS);;
+}
+
+TEST(Base, ConstructorLimits) {
+    // uint64_t
+    assert_str_equal(BigInt(std::numeric_limits<uint64_t>::max()), std::numeric_limits<uint64_t>::max());
+    assert_str_equal(BigInt(std::numeric_limits<uint64_t>::min()), std::numeric_limits<uint64_t>::min());
+    // uint32_t
+    assert_str_equal(BigInt(std::numeric_limits<uint32_t>::max()), std::numeric_limits<uint32_t>::max());
+    assert_str_equal(BigInt(std::numeric_limits<uint32_t>::min()), std::numeric_limits<uint32_t>::min());
+    // uint16_t
+    assert_str_equal(BigInt(std::numeric_limits<uint16_t>::max()), std::numeric_limits<uint16_t>::max());
+    assert_str_equal(BigInt(std::numeric_limits<uint16_t>::min()), std::numeric_limits<uint16_t>::min());
+    // uint8_t
+    assert_str_equal(BigInt(std::numeric_limits<uint8_t>::max()), std::numeric_limits<uint8_t>::max());
+    assert_str_equal(BigInt(std::numeric_limits<uint8_t>::min()), std::numeric_limits<uint8_t>::min());
+    // int64_t
+    assert_str_equal(BigInt(std::numeric_limits<int64_t>::max()), std::numeric_limits<int64_t>::max());
+    assert_str_equal(BigInt(std::numeric_limits<int64_t>::min()), std::numeric_limits<int64_t>::min());
+    // int32_t
+    assert_str_equal(BigInt(std::numeric_limits<int32_t>::max()), std::numeric_limits<int32_t>::max());
+    assert_str_equal(BigInt(std::numeric_limits<int32_t>::min()), std::numeric_limits<int32_t>::min());
+    // int16_t
+    assert_str_equal(BigInt(std::numeric_limits<int16_t>::max()), std::numeric_limits<int16_t>::max());
+    assert_str_equal(BigInt(std::numeric_limits<int16_t>::min()), std::numeric_limits<int16_t>::min());
+    // int8_t
+    assert_str_equal(BigInt(std::numeric_limits<int8_t>::max()), std::numeric_limits<int8_t>::max());
+    assert_str_equal(BigInt(std::numeric_limits<int8_t>::min()), std::numeric_limits<int8_t>::min());
 }
 
 TEST(Operators, Less) {
@@ -218,7 +255,8 @@ TEST(Operators, Divide) {
     ASSERT_EQ(BigInt(-3) / -2, 1);
     // advanced case
     ASSERT_EQ(BigInt("2736452834528435438245") / 23654, BigInt("115686684473173054"));
-    ASSERT_EQ(BigInt("913286491285639827569235623985620356293586192365923659235") / BigInt("-23498562965239865293562387562873562837568325768325"),
+    ASSERT_EQ(BigInt("913286491285639827569235623985620356293586192365923659235") /
+              BigInt("-23498562965239865293562387562873562837568325768325"),
               BigInt("-38865631"));
 }
 
