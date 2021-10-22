@@ -118,7 +118,7 @@ BigInt::BigInt(std::string_view a) {
     std::for_each(a.begin() + i, a.end(), [&a, this](const char &s) {
         if (s < '0' || s > '9') {
             std::cerr << "Invalid value for integer: " << (negative ? "-" : "") << a << std::endl;
-            exit(1);
+            throw std::invalid_argument(std::string(a.begin(), a.end()));
         }
         digits.emplace_back(s - '0');
     });
@@ -136,13 +136,7 @@ BigInt::BigInt(std::vector<int8_t> _digits, bool negative) : digits(std::move(_d
 }
 
 std::ostream &operator<<(std::ostream &os, const BigInt &bigInt) {
-    if (bigInt.negative) {
-        os << "-";
-    }
-    std::vector<int8_t> digits = bigInt.digits;
-    std::for_each(digits.begin(), digits.end(), [&os](int8_t &i) {
-        os << +i;
-    });
+    bigInt.print_to_os(os);
     return os;
 }
 
@@ -190,7 +184,7 @@ bool BigInt::operator!=(const BigInt &rhs) const {
     return !(*this == rhs);
 }
 
-BigInt BigInt::operator++() {
+BigInt &BigInt::operator++() {
     *this += 1;
     return *this;
 }
@@ -201,7 +195,7 @@ BigInt BigInt::operator++(int) {
     return tmp;
 }
 
-BigInt BigInt::operator--() {
+BigInt &BigInt::operator--() {
     *this -= 1;
     return *this;
 }
@@ -336,4 +330,13 @@ BigInt BigInt::nth_power_of_10(int64_t n) const {
         return {digits_copy, negative};
     }
     return *this;
+}
+
+void BigInt::print_to_os(std::ostream &os) const {
+    if (negative) {
+        os << "-";
+    }
+    std::for_each(digits.begin(), digits.end(), [&os](const int8_t &i) {
+        os << +i;
+    });
 }

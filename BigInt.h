@@ -47,6 +47,8 @@ public:
 
     BigInt &operator=(BigInt &&) = default;
 
+    void print_to_os(std::ostream &os) const;
+
     friend std::ostream &operator<<(std::ostream &, const BigInt &);
 
     bool operator<(const BigInt &) const;
@@ -61,11 +63,11 @@ public:
 
     bool operator!=(const BigInt &) const;
 
-    BigInt operator++();
+    BigInt &operator++();
 
     BigInt operator++(int);
 
-    BigInt operator--();
+    BigInt &operator--();
 
     BigInt operator--(int);
 
