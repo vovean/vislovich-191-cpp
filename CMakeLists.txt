@@ -3,7 +3,7 @@ project(hw1)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(hw1 main.cpp BigInt.cpp BigInt.h)
+add_executable(hw1 main.cpp BigInt.cpp BigInt.h MathParser.h MathParser.cpp)
 
 # gtest настраивал как здесь: https://www.eriksmistad.no/getting-started-with-google-test-on-ubuntu/
 find_package(GTest REQUIRED)

@@ -274,6 +274,8 @@ BigInt BigInt::operator/(const BigInt &rhs) const {
  * > -3 / (-2) ==  1
  */
 BigInt &BigInt::operator/=(const BigInt &rhs) {
+    if (rhs == 0)
+        throw std::invalid_argument("Division by 0 error");
     if (abs() < rhs.abs())
         *this = 0;
     else {
@@ -339,4 +341,15 @@ void BigInt::print_to_os(std::ostream &os) const {
     std::for_each(digits.begin(), digits.end(), [&os](const int8_t &i) {
         os << +i;
     });
+}
+
+BigInt &BigInt::operator%=(const BigInt &rhs) {
+    *this -= (*this) / rhs * rhs;
+    return *this;
+}
+
+BigInt BigInt::operator%(const BigInt &rhs) const {
+    BigInt tmp(*this);
+    tmp %= rhs;
+    return tmp;
 }

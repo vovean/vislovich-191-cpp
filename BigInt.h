@@ -83,6 +83,8 @@ public:
 
     BigInt &operator/=(const BigInt &);
 
+    BigInt &operator%=(const BigInt &);
+
 
     BigInt operator+(const BigInt &) const;
 
@@ -91,6 +93,8 @@ public:
     BigInt operator*(const BigInt &) const;
 
     BigInt operator/(const BigInt &) const;
+
+    BigInt operator%(const BigInt &) const;
 };
 
 

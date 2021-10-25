@@ -35,26 +35,10 @@ TEST(Base, TestConstructor) {
 
 
     // negative cases
-    ASSERT_EXIT(
-            BigInt("-12854-9476346"),
-            ::testing::ExitedWithCode(1),
-            "Invalid value for integer: -12854-9476346"
-    );
-    ASSERT_EXIT(
-            BigInt("000-9476346"),
-            ::testing::ExitedWithCode(1),
-            "Invalid value for integer: 000-9476346"
-    );
-    ASSERT_EXIT(
-            BigInt("-000-9476346"),
-            ::testing::ExitedWithCode(1),
-            "Invalid value for integer: -000-9476346"
-    );
-    ASSERT_EXIT(
-            BigInt("--9476346"),
-            ::testing::ExitedWithCode(1),
-            "Invalid value for integer: --9476346"
-    );
+    ASSERT_ANY_THROW(BigInt("-12854-9476346"));
+    ASSERT_ANY_THROW(BigInt("000-9476346"));
+    ASSERT_ANY_THROW(BigInt("-000-9476346"));
+    ASSERT_ANY_THROW(BigInt("--9476346"));
 }
 
 template<typename V, typename T>
@@ -258,6 +242,26 @@ TEST(Operators, Divide) {
     ASSERT_EQ(BigInt("913286491285639827569235623985620356293586192365923659235") /
               BigInt("-23498562965239865293562387562873562837568325768325"),
               BigInt("-38865631"));
+    // division by 0
+    ASSERT_ANY_THROW(BigInt(123) / 0);
+}
+
+TEST(Operators, Modulus) {
+    // positive
+    ASSERT_EQ(BigInt(5) % 3, 2);
+    ASSERT_EQ(BigInt(5) % 1, 0);
+    ASSERT_EQ(BigInt(0) % 3, 0);
+    ASSERT_EQ(BigInt(2) % 3, 2);
+    // negative
+    ASSERT_EQ(BigInt(-3) % 2, -1);
+    ASSERT_EQ(BigInt(-3) % 4, -3);
+    ASSERT_EQ(BigInt(-3) % 1, 0);
+    ASSERT_EQ(BigInt(3) % (-2), 1);
+    ASSERT_EQ(BigInt(3) % (-4), 3);
+    ASSERT_EQ(BigInt(3) % (-1), 0);
+    // division by zero
+    ASSERT_ANY_THROW(BigInt(3) % 0);
+    ASSERT_ANY_THROW(BigInt(-3) % 0);
 }
 
 int main(int argc, char **argv) {
